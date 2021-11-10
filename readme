@@ -1,0 +1,25 @@
+This is a project for Molcolm Concept Ltd
+This project was created using the following technologies
+ a. laravel
+ b. mysql
+ c. livewire
+ 
+To replicate
+1. run the mysql file in your localserver using the following parameters
+  a. Database name = molcolm
+  b. user name = root
+  c. password = molcolm
+  
+ 2.you can view the project by running it in insomia or postman
+ a. to register a user
+   url = localhost:8000/api/api_login
+         name:
+         email:
+         password
+         confirm_password
+b. to login a user
+       email:
+       password
+      note: if you successfully log in a user
+       1. you get an access token
+       2. you get to see how long the refresh token lasts
