@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
@@ -17,32 +20,45 @@ class AuthController extends Controller
         $user= User::create([
             'name' =>$request->name,
             'email'=>$request->email,
-            'password'=>bcrypt($request->password)
+            'password'=>bcrypt($request->password),
+            'confirm_password' => bcrypt($request->password),
         ]);
 
-        $access_token_example = $user->createToken('PassportExample@Section.io')->access_token;
+//        $token = $user->createToken($request->email.'molcolm'.$request->name)->access_token;
         //return the access token we generated in the above step
-        return response()->json(['token'=>$access_token_example],200);
+         return response()->json(['message'=>'Registration Successful'],200);
+       // return response($token, Response::HTTP_CREATED);
     }
 
     /**
      * login user to our application
      */
     public function apiLogin(Request $request){
-        $login_credentials=[
-            'email'=>$request->email,
-            'password'=>$request->password,
-        ];
-        if(auth()->attempt($login_credentials)){
-            //generate the token for the user
-            $user_login_token= auth()->user()->createToken()->accessToken;
-            //now return this token on success login attempt
-            return response()->json(['token' => $user_login_token], 200);
+        if(Auth::attempt($request->only('email','password'))){
+            $user = Auth::user();
+
+            $token = $user->createToken('admin')->accessToken;
+
+            return [
+                'token' => $token
+            ];
         }
-        else{
-            //wrong login credentials, return, user not authorised to our system, return error code 401
-            return response()->json(['error' => 'UnAuthorised Access'], 401);
-        }
+        Route::get('/redirect', function (Request $request) {
+            $request->session()->put('state', $state = Str::random(40));
+
+            $query = http_build_query([
+                'client_id' => 'client-id',
+                'redirect_uri' => 'http://localhost:8000/auth/callback',
+                'response_type' => 'code',
+                'scope' => '',
+                'state' => $state,
+            ]);
+
+            return redirect('http://localhost:8000/oauth/authorize?'.$query);
+        });
+        return response([
+            'error'=>'Invalid Credentials'
+        ], Response::HTTP_UNAUTHORIZED);
     }
 
     /**
